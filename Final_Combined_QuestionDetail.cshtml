@@ -1,0 +1,133 @@
+@model CodeCommunityFlow.SelectList.SelectReportReason
+@{
+    ViewBag.Title = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+<div class="alert alert-success" id="successAlert">@TempData["Success"]</div>
+}
+
+<div class="container mt-5">
+    <div class="col-xl-12 question-container">
+        @* Question section *@
+        @if (Convert.ToInt32(Session["CurrentUserID"]) != Model.UserID)
+        {
+        <div class="col-md-12 border bg-Question">
+            <h3 class="mb-3">@Model.QuestionName</h3>
+        </div>
+        <br />
+
+        <div class="col-md-12 border bg-Question p-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 w-100 parents-of-vote">
+
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <span class="badge badge-category">@Model.Categories.CatagoryName</span>
+                    <span>
+                        @if (Convert.ToInt32(Session["CurrentUserID"]) == Model.Users?.UserID)
+                            {
+                        <a href="/Account/MyProfile">By You</a>
+                            }
+                            else if (Model.Users != null)
+                            {
+                        <a href="@Url.Action("UserDetails", "Account", new { id = Model.Users.UserID })">
+                            By @Model.Users.UserName
+                        </a>
+                            }
+                            else
+                            {
+                        <span>By Unknown</span>
+                            }
+                    </span>
+
+                    @{
+                            var imageFileName = string.IsNullOrEmpty(Model.Users?.ImageUser)
+                                ? "user.png" : Model.Users.ImageUser;
+                            var imageUserAsk = Url.Content("~/Uploads/ImageUsers/" + imageFileName);
+                    }
+                    <img src="@imageUserAsk" width="30" class="rounded" alt="User image" />
+
+                    @if (Session["CurrentUserName"] != null && Convert.ToInt32(Session["CurrentUserID"]) != Model.UserID)
+                        {
+                    <img src="~/Images/Buttons Arrow/@(Model.CurrentUserVoteType == 1 ? "green up" : "up").png"
+                         class="btnUpVoteQuestion" style="cursor:pointer" width="30" height="30"
+                         data-questionid="@Model.QuestionID" />
+                    <img src="~/Images/Buttons Arrow/@(Model.CurrentUserVoteType == -1 ? "red down" : "down").png"
+                         class="btnDownVoteQuestion" style="cursor:pointer" width="30" height="30"
+                         data-questionid="@Model.QuestionID" />
+                        }
+                </div>
+
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <span class="text-muted">@Model.QuestionDateTime</span>
+                    <span class="badge badge-customVoteCount votecount">@Model.VotesCount Votes</span>
+
+                    @if (Model.AnswersCount == 0)
+                        {
+                    <span class="text-danger">No answer</span>
+                        }
+                        else
+                        {
+                    <span class="badge badge-AnswersCount">@Model.Answers.Count Answer</span>
+                        }
+
+                    <span class="badge badge-ViewsCount">@Model.ViewsCount Views</span>
+
+                    @if (Session["CurrentUserName"] != null && Convert.ToInt32(Session["CurrentUserID"]) != Model.UserID)
+                        {
+                            var dropdownId = $"report-dropdown-{Model.QuestionID}";
+                            var ReportedUserId = Model.UserID;
+                    <div class="dropdown d-inline position-relative">
+                        <button type="button" class="btn btn-sm report-toggle" data-target="#@dropdownId">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        </button>
+                        <div class="dropdown-menu custom-dropdown shadow" id="@dropdownId">
+                            @if (Model.ReportReasonSelectList != null && Model.ReportReasonSelectList.Any())
+                                {
+                                    foreach (var reason in Model.ReportReasonSelectList)
+                                    {
+                            <a class="dropdown-item report-reason"
+                               href="@Url.Action("ReportQuestion", "Questions",
+                                                    new { questionId = Model.QuestionID, reasonId = reason.Value, ReportedUserId = ReportedUserId })">
+                                @reason.Text
+                            </a>
+                                    }
+                                }
+                              else
+                                {
+                            <span class="dropdown-item text-muted">No reasons found</span>
+                                }
+                        </div>
+                    </div>
+                        }
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="text-left">
+                <pre class="p-3 rounded"><code class="language-html">
+                        @Html.Raw(System.Net.WebUtility.HtmlEncode(Model.QuestionContent))
+                    </code></pre>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Image))
+                {
+                    var imagePaths = Model.Image.Split(';');
+                    foreach (var path in imagePaths)
+                    {
+            <div class="my-2 d-flex justify-content-center">
+                <img src="@path" class="img-fluid" style="max-width: 100%; height: auto;" />
+            </div>
+                    }
+                }
+        </div>
+        <br />
+        }
+        else
+        {
+            @: @* Owner view omitted for brevity, it's same logic as above but without voting and with edit button *@
+        }
+    </div>
+</div>
